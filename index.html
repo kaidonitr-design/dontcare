@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Team Application</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        base: { DEFAULT:'#0a0a12', 200:'#111120', 300:'#16162a', 400:'#22223a', 500:'#2e2e4a' },
+                        fg: { DEFAULT:'#e8e6f0', dim:'#aaa8be', muted:'#6a6880' },
+                        accent: { DEFAULT:'#5d9b3a', dark:'#4a7d2e', light:'#72b84a' },
+                        danger: '#ff4757', warn: '#ffa502', ok: '#2ed573',
+                    },
+                    fontFamily: { display:['Space Grotesk','sans-serif'], body:['DM Sans','sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'DM Sans',sans-serif;background:#0a0a12;color:#e8e6f0;min-height:100vh}
+        .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:60px 60px}
+        .blob{position:fixed;border-radius:50%;filter:blur(120px);opacity:.08;pointer-events:none;z-index:0}
+        .b1{width:500px;height:500px;background:#5d9b3a;top:-150px;right:-100px;animation:f1 20s ease-in-out infinite}
+        .b2{width:400px;height:400px;background:#00b4d8;bottom:-100px;left:-80px;animation:f2 25s ease-in-out infinite}
+        .b3{width:300px;height:300px;background:#8b6914;top:40%;left:40%;animation:f3 18s ease-in-out infinite;opacity:.05}
+        @keyframes f1{0%,100%{transform:translate(0,0)}50%{transform:translate(-60px,40px)}}
+        @keyframes f2{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,-60px)}}
+        @keyframes f3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-30px) scale(1.15)}}
+        .particle{position:fixed;pointer-events:none;z-index:0;animation:pd linear infinite;border-radius:1px}
+        @keyframes pd{0%{transform:translateY(100vh);opacity:0}10%{opacity:.5}90%{opacity:.5}100%{transform:translateY(-10vh);opacity:0}}
+        .screen{display:none;opacity:0;transform:translateY(12px);transition:opacity .4s,transform .4s}
+        .screen.active{display:flex}
+        .screen.visible{opacity:1;transform:translateY(0)}
+        .card{background:rgba(17,17,32,.85);border:1px solid #22223a;border-radius:16px;backdrop-filter:blur(16px)}
+        .form-input{width:100%;background:#0e0e1a;border:1.5px solid #22223a;border-radius:10px;padding:12px 16px;color:#e8e6f0;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border .3s,box-shadow .3s}
+        .form-input:focus{border-color:#5d9b3a;box-shadow:0 0 0 3px rgba(93,155,58,.15)}
+        .form-input:disabled{opacity:.4;cursor:not-allowed}
+        .form-input.error{border-color:#ff4757;box-shadow:0 0 0 3px rgba(255,71,87,.1)}
+        .form-input::placeholder{color:#3a3a55}
+        textarea.form-input{resize:vertical;min-height:100px;line-height:1.6}
+        .btn-primary{background:linear-gradient(135deg,#5d9b3a,#4a7d2e);color:#fff;font-weight:600;padding:13px 28px;border-radius:10px;border:none;cursor:pointer;font-size:15px;font-family:'Space Grotesk',sans-serif;transition:all .3s}
+        .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 25px rgba(93,155,58,.3)}
+        .btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+        .btn-ghost{background:0;border:1.5px solid #22223a;color:#aaa8be;padding:10px 20px;border-radius:10px;cursor:pointer;font-size:14px;font-family:'DM Sans',sans-serif;transition:all .3s}
+        .btn-ghost:hover{border-color:#3a3a55;color:#e8e6f0}
+        .google-btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;background:#fff;color:#3c4043;font-weight:500;padding:13px 24px;border-radius:10px;border:none;cursor:pointer;font-size:15px;font-family:'DM Sans',sans-serif;transition:all .3s;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+        .google-btn:hover{box-shadow:0 4px 16px rgba(0,0,0,.4);transform:translateY(-1px)}
+        .toast-box{position:fixed;top:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:10px}
+        .toast{padding:14px 20px;border-radius:10px;font-size:14px;display:flex;align-items:center;gap:10px;min-width:280px;max-width:400px;animation:tin .4s ease forwards;cursor:pointer;box-shadow:0 8px 25px rgba(0,0,0,.4);border:1px solid transparent}
+        .toast.out{animation:tout .3s ease forwards}
+        .toast-success{background:rgba(46,213,115,.1);border-color:rgba(46,213,115,.2);color:#2ed573}
+        .toast-error{background:rgba(255,71,87,.1);border-color:rgba(255,71,87,.2);color:#ff4757}
+        .toast-info{background:rgba(93,155,58,.1);border-color:rgba(93,155,58,.2);color:#5d9b3a}
+        @keyframes tin{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+        @keyframes tout{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+        .pulse{animation:pu 2s ease-in-out infinite}
+        @keyframes pu{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.05)}}
+        .grass{height:4px;border-radius:2px;background:linear-gradient(90deg,#5d9b3a,#4a8c2f,#5d9b3a,#6baa42,#5d9b3a)}
+        .char-ct{font-size:12px;color:#3a3a55;text-align:right;margin-top:4px}
+        .char-ct.w{color:#ffa502}.char-ct.o{color:#ff4757}
+        .field-err{font-size:12px;color:#ff4757;margin-top:4px;display:none}
+        .field-err.show{display:block}
+        .nav-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#5d9b3a,#8b6914);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700;flex-shrink:0;overflow:hidden}
+        .nav-av img{width:100%;height:100%;object-fit:cover}
+        .spinner{width:20px;height:20px;border:2.5px solid transparent;border-top-color:currentColor;border-radius:50%;animation:sp .6s linear infinite;display:inline-block}
+        @keyframes sp{to{transform:rotate(360deg)}}
+        ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:0}::-webkit-scrollbar-thumb{background:#22223a;border-radius:3px}
+        @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+    <div id="particles"></div>
+
+    <section id="s-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;position:relative;z-index:10;gap:16px">
+        <div class="spinner" style="width:32px;height:32px;border-width:3px;color:#5d9b3a"></div>
+        <p style="color:#6a6880;font-size:14px">Checking session...</p>
+    </section>
+
+    <section id="s-login" class="screen min-h-screen items-center justify-center px-4 relative z-10">
+        <div class="card p-10 sm:p-12 w-full max-w-md text-center relative overflow-hidden">
+            <div class="grass absolute top-0 left-0 right-0"></div>
+            <div class="mx-auto mb-6 mt-4 w-16 h-16 rounded-2xl flex items-center justify-center" style="background:linear-gradient(135deg,#5d9b3a,#4a7d2e);box-shadow:0 8px 25px rgba(93,155,58,.25)">
+                <i class="fa-solid fa-cubes text-2xl text-white"></i>
+            </div>
+            <h1 class="font-display text-3xl font-bold mb-2">Team Application</h1>
+            <p class="text-fg-dim text-sm mb-8">Sign in with Google to apply for our Minecraft team.</p>
+            <a href="/auth/google" class="google-btn block no-underline">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                Sign in with Google
+            </a>
+            <p class="text-fg-muted text-xs mt-6">You can only submit one application.</p>
+        </div>
+    </section>
+
+    <section id="s-form" class="screen min-h-screen flex-col relative z-10">
+        <nav class="w-full border-b border-base-400 sticky top-0 z-20" style="background:rgba(10,10,18,.8);backdrop-filter:blur(16px)">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#5d9b3a,#4a7d2e)"><i class="fa-solid fa-cubes text-white text-sm"></i></div>
+                    <span class="font-display font-semibold text-sm hidden sm:inline">Team Application</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2"><div class="nav-av" id="av1"><span id="avt1"></span></div><span class="text-sm text-fg-dim hidden sm:inline" id="nm1"></span></div>
+                    <a href="/auth/logout" class="btn-ghost text-xs py-2 px-3 no-underline"><i class="fa-solid fa-right-from-bracket mr-1"></i>Sign Out</a>
+                </div>
+            </div>
+        </nav>
+        <div class="flex-1 flex items-start justify-center px-4 sm:px-6 py-10">
+            <div class="w-full max-w-2xl">
+                <div class="mb-8"><h2 class="font-display text-2xl sm:text-3xl font-bold mb-2">Minecraft Team Application</h2><p class="text-fg-dim text-sm">Answer honestly. One shot — make it count.</p></div>
+                <form id="appform" class="space-y-6" novalidate>
+                    <div class="card p-6 sm:p-8">
+                        <div class="flex items-center gap-2 mb-6"><div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:rgba(93,155,58,.1)"><i class="fa-solid fa-user text-xs" style="color:#5d9b3a"></i></div><h3 class="font-display font-semibold text-lg">Your Info</h3></div>
+                        <div class="space-y-5">
+                            <div><label class="block text-sm font-medium text-fg-dim mb-2">Minecraft Username <span class="text-danger">*</span></label><input type="text" id="f-mc" class="form-input" placeholder="e.g. Notch" pattern="^[a-zA-Z0-9_]{3,16}$" required><p class="text-xs text-fg-muted mt-1">3-16 characters.</p><p class="field-err" id="e-mc">Invalid Minecraft username.</p></div>
+                            <div><label class="block text-sm font-medium text-fg-dim mb-2">Email <i class="fa-solid fa-lock text-xs ml-1" style="color:#5d9b3a"></i></label><input type="email" id="f-email" class="form-input" disabled></div>
+                            <div><label class="block text-sm font-medium text-fg-dim mb-2">Age <span class="text-danger">*</span></label><input type="number" id="f-age" class="form-input" placeholder="e.g. 17" min="10" max="99" required><p class="field-err" id="e-age">Enter a valid age (10-99).</p></div>
+                        </div>
+                    </div>
+                    <div class="card p-6 sm:p-8">
+                        <div class="flex items-center gap-2 mb-6"><div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:rgba(93,155,58,.1)"><i class="fa-solid fa-gamepad text-xs" style="color:#5d9b3a"></i></div><h3 class="font-display font-semibold text-lg">Minecraft Questions</h3></div>
+                        <div class="space-y-5">
+                            <div><label class="block text-sm font-medium text-fg-dim mb-2">How long have you been playing, and what versions/platforms? <span class="text-danger">*</span></label><textarea id="f-q1" class="form-input" maxlength="600" required placeholder="e.g. Since 2018, Java Edition..."></textarea><div class="char-ct" data-for="f-q1">0 / 600</div><p class="field-err" id="e-q1">Required.</p></div>
+                            <div><label class="block text-sm font-medium text-fg-dim mb-2">Strongest skills? (building, redstone, PvP, etc.) <span class="text-danger">*</span></label><textarea id="f-q2" class="form-input" maxlength="600" required placeholder="e.g. Medieval building, basic redstone..."></textarea><div class="char-ct" data-for="f-q2">0 / 600</div><p class="field-err" id="e-q2">Required.</p></div>
+                            <div><label class="block text-sm font-medium text-fg-dim mb-2">Past teams, servers, or build teams? <span class="text-danger">*</span></label><textarea id="f-q3" class="form-input" maxlength="600" required placeholder="e.g. Builder on X server for 1 year..."></textarea><div class="char-ct" data-for="f-q3">0 / 600</div><p class="field-err" id="e-q3">Required.</p></div>
+                            <div><label class="block text-sm font-medium text-fg-dim mb-2">Why join our team, what sets you apart? <span class="text-danger">*</span></label><textarea id="f-q4" class="form-input" maxlength="600" required placeholder="e.g. Love your builds, want to improve..."></textarea><div class="char-ct" data-for="f-q4">0 / 600</div><p class="field-err" id="e-q4">Required.</p></div>
+                            <div><label class="block text-sm font-medium text-fg-dim mb-2">Portfolio/screenshots link (optional)</label><input type="url" id="f-q5" class="form-input" placeholder="https://imgur.com/a/..."></div>
+                            <div><label class="block text-sm font-medium text-fg-dim mb-2">Anything else? (optional)</label><textarea id="f-q6" class="form-input" maxlength="400" placeholder="Timezone, Discord tag..."></textarea><div class="char-ct" data-for="f-q6">0 / 400</div></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-2 pb-8">
+                        <p class="text-xs text-fg-muted max-w-xs"><i class="fa-solid fa-circle-info mr-1"></i>Cannot edit or re-submit after.</p>
+                        <button type="submit" class="btn-primary whitespace-nowrap" id="btn-sub">Submit Application</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section id="s-status" class="screen min-h-screen flex-col relative z-10">
+        <nav class="w-full border-b border-base-400 sticky top-0 z-20" style="background:rgba(10,10,18,.8);backdrop-filter:blur(16px)">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#5d9b3a,#4a7d2e)"><i class="fa-solid fa-cubes text-white text-sm"></i></div><span class="font-display font-semibold text-sm hidden sm:inline">Team Application</span></div>
+                <div class="flex items-center gap-3"><div class="flex items-center gap-2"><div class="nav-av" id="av2"><span id="avt2"></span></div><span class="text-sm text-fg-dim hidden sm:inline" id="nm2"></span></div><a href="/auth/logout" class="btn-ghost text-xs py-2 px-3 no-underline"><i class="fa-solid fa-right-from-bracket mr-1"></i>Sign Out</a></div>
+            </div>
+        </nav>
+        <div class="flex-1 flex items-center justify-center px-4 sm:px-6 py-10"><div class="w-full max-w-lg text-center" id="status-box"></div></div>
+    </section>
+
+    <section id="s-error" class="screen min-h-screen items-center justify-center px-4 relative z-10">
+        <div class="card p-10 w-full max-w-md text-center"><i class="fa-solid fa-triangle-exclamation text-4xl text-warn mb-4 block"></i><h2 class="font-display text-xl font-bold mb-2">Something went wrong</h2><p class="text-fg-dim text-sm mb-6" id="err-msg">Cannot connect to server.</p><a href="/" class="btn-primary inline-block no-underline">Try Again</a></div>
+    </section>
+
+    <div class="toast-box" id="toasts"></div>
+
+    <script>
+    var A = {
+        user: null, status: null, poll: null,
+        esc: function(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; },
+        hideLoading: function() { var el = document.getElementById('s-loading'); el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(function() { el.style.display = 'none'; }, 300); },
+        show: function(id) {
+            var all = document.querySelectorAll('.screen');
+            for (var i = 0; i < all.length; i++) { if (all[i].id === id) continue; all[i].classList.remove('visible'); all[i].classList.remove('active'); }
+            var t = document.getElementById(id); t.classList.add('active');
+            setTimeout(function() { t.classList.add('visible'); window.scrollTo(0, 0); }, 30);
+        },
+        nav: function() {
+            var ini = this.user.name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase();
+            document.getElementById('avt1').textContent = ini; document.getElementById('avt2').textContent = ini;
+            document.getElementById('nm1').textContent = this.user.name; document.getElementById('nm2').textContent = this.user.name;
+            if (this.user.photo) { document.getElementById('av1').innerHTML = '<img src="' + this.user.photo + '" alt="">'; document.getElementById('av2').innerHTML = '<img src="' + this.user.photo + '" alt="">'; }
+        },
+        validate: function() {
+            var ok = true, inputs = document.querySelectorAll('.form-input'), errs = document.querySelectorAll('.field-err');
+            for (var i = 0; i < inputs.length; i++) inputs[i].classList.remove('error');
+            for (var i = 0; i < errs.length; i++) errs[i].classList.remove('show');
+            var mc = document.getElementById('f-mc');
+            if (!mc.value.trim() || !/^[a-zA-Z0-9_]{3,16}$/.test(mc.value.trim())) { mc.classList.add('error'); document.getElementById('e-mc').classList.add('show'); ok = false; }
+            var age = document.getElementById('f-age'), av = parseInt(age.value);
+            if (!age.value || isNaN(av) || av < 10 || av > 99) { age.classList.add('error'); document.getElementById('e-age').classList.add('show'); ok = false; }
+            var qs = ['q1','q2','q3','q4'];
+            for (var i = 0; i < qs.length; i++) { var f = document.getElementById('f-' + qs[i]); if (!f.value.trim()) { f.classList.add('error'); document.getElementById('e-' + qs[i]).classList.add('show'); ok = false; } }
+            if (!ok) { this.toast('Fix the highlighted fields.', 'error'); var first = document.querySelector('.form-input.error'); if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+            return ok;
+        },
+        submit: function() {
+            var self = this, btn = document.getElementById('btn-sub');
+            btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Submitting...';
+            fetch('/api/application/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ minecraftName: document.getElementById('f-mc').value.trim(), age: parseInt(document.getElementById('f-age').value), playHistory: document.getElementById('f-q1').value.trim(), skills: document.getElementById('f-q2').value.trim(), pastTeams: document.getElementById('f-q3').value.trim(), whyJoin: document.getElementById('f-q4').value.trim(), portfolio: document.getElementById('f-q5').value.trim(), additional: document.getElementById('f-q6').value.trim() })
+            }).then(function(r) { return r.json().then(function(d) { if (!r.ok) throw new Error(d.error); return d; }); }).then(function() { self.toast('Application submitted!', 'success'); return fetch('/api/application/status');
+            }).then(function(r) { return r.json(); }).then(function(d) { self.status = d; self.renderStatus(); self.show('s-status');
+            }).catch(function(e) { self.toast(e.message || 'Submission failed.', 'error'); }).finally(function() { btn.disabled = false; btn.textContent = 'Submit Application'; });
+        },
+        renderStatus: function() {
+            var s = this.status, dt = new Date(s.submittedAt).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' });
+            var c = { pending:{icon:'fa-hourglass-half',clr:'text-warn',bg:'bg-warn/10',title:'Pending Review',bd:'border-warn/30',desc:'Your application is being reviewed. You will get an email when decided.',p:true}, accepted:{icon:'fa-circle-check',clr:'text-ok',bg:'bg-ok/10',title:'Accepted',bd:'border-ok/30',desc:'You have been accepted! Check your email for next steps.',p:false}, denied:{icon:'fa-circle-xmark',clr:'text-danger',bg:'bg-danger/10',title:'Denied',bd:'border-danger/30',desc:s.denyReason?'Your application was not accepted. Reason below.':'Your application was not accepted.',p:false} }[s.status];
+            var h = '<div class="card p-8 sm:p-10 border '+c.bd+'"><div class="w-20 h-20 rounded-full '+c.bg+' flex items-center justify-center mx-auto mb-6 '+(c.p?'pulse':'')+'"><i class="fa-solid '+c.icon+' text-4xl '+c.clr+'"></i></div><h2 class="font-display text-2xl sm:text-3xl font-bold mb-3">'+c.title+'</h2><p class="text-fg-dim text-sm leading-relaxed mb-6 max-w-sm mx-auto">'+c.desc+'</p>';
+            if (s.denyReason) h += '<div class="bg-danger/5 border border-danger/20 rounded-xl p-4 max-w-sm mx-auto text-left"><p class="text-xs font-semibold text-danger mb-1"><i class="fa-solid fa-comment-dots mr-1"></i>Staff Reason</p><p class="text-sm text-fg-dim">'+this.esc(s.denyReason)+'</p></div>';
+            h += '<div class="mt-8 pt-6 border-t border-base-400"><p class="text-xs text-fg-muted"><i class="fa-regular fa-calendar mr-1"></i>Submitted: '+dt+'</p></div></div><p class="text-fg-muted text-xs mt-6">Cannot submit again. Contact us on Discord if this is an error.</p>';
+            document.getElementById('status-box').innerHTML = h;
+            if (s.status === 'pending') this.startPoll();
+        },
+        startPoll: function() { var self = this; this.stopPoll(); this.poll = setInterval(function() { fetch('/api/application/status').then(function(r){return r.json()}).then(function(d){ if(d.applied&&d.status!=='pending'){self.status=d;self.stopPoll();self.renderStatus();self.toast(d.status==='accepted'?'Accepted! Check email.':'Denied. Check email.',d.status==='accepted'?'success':'error');}}).catch(function(){}); }, 10000); },
+        stopPoll: function() { if(this.poll){clearInterval(this.poll);this.poll=null;} },
+        toast: function(msg, type) { type=type||'info'; var c=document.getElementById('toasts'),t=document.createElement('div'); t.className='toast toast-'+type; var icons={success:'fa-circle-check',error:'fa-circle-exclamation',info:'fa-circle-info'}; t.innerHTML='<i class="fa-solid '+(icons[type]||icons.info)+'"></i><span>'+msg+'</span>'; t.onclick=function(){t.remove()}; c.appendChild(t); setTimeout(function(){t.classList.add('out');setTimeout(function(){t.remove()},300)},5000); },
+        mkCounters: function() { var cts=document.querySelectorAll('.char-ct'); for(var i=0;i<cts.length;i++){(function(ct){var f=document.getElementById(ct.dataset.for);if(f)f.addEventListener('input',function(){var mx=parseInt(f.maxLength),l=f.value.length;ct.textContent=l+' / '+mx;ct.className='char-ct'+(l>=mx?' o':l>=mx*.85?' w':'')});})(cts[i]);} },
+        mkParticles: function() { var c=document.getElementById('particles'),cols=['#5d9b3a','#4a7d2e','#8b6914','#7a7a7a','#6b4226']; for(var i=0;i<12;i++){var p=document.createElement('div');p.className='particle';var s=Math.random()*5+4;p.style.width=s+'px';p.style.height=s+'px';p.style.left=Math.random()*100+'%';p.style.background=cols[Math.floor(Math.random()*cols.length)];p.style.animationDuration=(Math.random()*20+15)+'s';p.style.animationDelay=(Math.random()*15)+'s';p.style.opacity=Math.random()*.25+.05;c.appendChild(p);} },
+        init: function() {
+            var self = this; this.mkParticles(); this.mkCounters();
+            document.getElementById('appform').addEventListener('submit', function(e) { e.preventDefault(); if(self.validate()) self.submit(); });
+            fetch('/auth/me').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(user){self.user=user;self.nav();return fetch('/api/application/status')}).then(function(r){return r.json()}).then(function(d){if(d.applied){self.status=d;self.renderStatus();self.hideLoading();self.show('s-status');return;}document.getElementById('f-email').value=self.user.email;self.hideLoading();self.show('s-form');}).catch(function(){self.hideLoading();self.show('s-login');});
+        }
+    };
+    document.addEventListener('DOMContentLoaded', function() { A.init(); });
+    </script>
+</body>
+</html>
